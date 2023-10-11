@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de mensagens</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+        
+</head>
+
+<body>
+    <div class="container">
+        <div class="row">
+            
+            <nav id="sidebar" class="col-md-12">
+                <div class="position-sticky">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <div class="accordion accordion-flush" id="accordionFlushExample">
+                                <div class="accordion-item">
+                                  <h2 class="accordion-header" id="flush-headingOne">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#flush-collapseOne" aria-expanded="false" aria-controls="flush-collapseOne">
+                                      Mensagens lidas
+                                    </button>
+                                  </h2>
+                                  <div id="flush-collapseOne" class="accordion-collapse collapse" aria-labelledby="flush-headingOne" data-bs-parent="#accordionFlushExample">
+                                    <div class="accordion-body">
+                                        <table class="table table-dark table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col">#</th>
+                                                    <th scope="col">Serviço solicitado</th>
+                                                    <th scope="col">Nome</th>
+                                                    <th scope="col">Email</th>
+                                                    <th scope="col">Mensagem</th>
+                                                    <th scope="col">Ações</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for msg in lidos %}
+                                                <tr>
+                                                    <td>{{ msg.id }}</td>
+                                                    <td>{{ msg.servico }}</td>
+                                                    <td>{{ msg.nome }}</td>
+                                                    <td>{{ msg.email }}</td>
+                                                    <td>
+                                                        {{msg.mensagem}}
+                                                    </td>
+                                                    <td>
+                                                        <center>
+                                                            <button type="button" class="btn btn-danger btn-excluir-mensagem"
+                                                            data-id="{{ msg.id }}">Excluir mensagem</button>
+                                                            <button type="button" class="btn btn-success btn-nao-lido" data-id="{{ msg.id }}">
+                                                                Marcar como não lido
+                                                            </button>
+                                                        </center>
+                                                    </td>
+                                                </tr>
+                                                
+                                                
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                        </li>
+                        <!-- Adicione mais itens de menu conforme necessário -->
+                    </ul>
+                </div>
+            </nav>
+
+            <!-- Conteúdo principal -->
+            <main class="col-md-12">
+                <h1>Mensagens não lidas</h1>
+                <table class="table table-dark table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Serviço solicitado</th>
+                            <th scope="col">Nome</th>
+                            <th scope="col">Email</th>
+                            <th scope="col">Mensagem/Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for contato in contratos %}
+                        <tr>
+                            <td>{{ contato.id }}</td>
+                            <td>{{ contato.servico }}</td>
+                            <td>{{ contato.nome }}</td>
+                            <td>{{ contato.email }}</td>
+                            <td>
+                                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                    data-bs-target="#modal-{{ contato.id }}">
+                                    Ver mensagem/Ações
+                                </button>
+                            </td>
+                        </tr>
+                        
+                        <div class="modal" tabindex="-1" id="modal-{{ contato.id }}">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Mensagem de {{ contato.email }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>{{ contato.mensagem }}</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                                        <button type="button" class="btn btn-danger btn-excluir-mensagem"
+                                            data-id="{{ contato.id }}">Excluir mensagem</button>
+                                        <button type="button" class="btn btn-success btn-lido" data-id="{{ contato.id }}">Marcar como
+                                            lido</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </main>
+        </div>
+    </div>
+
+    <!-- Seu JavaScript aqui -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const botoesExcluir = document.querySelectorAll(".btn-excluir-mensagem");
+
+            botoesExcluir.forEach(function (botao) {
+                botao.addEventListener("click", function () {
+                    const idContato = botao.getAttribute("data-id");
+
+                    // Enviar solicitação AJAX para excluir a mensagem
+                    fetch(`/excluir_mensagem/${idContato}/`, {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": getCookie("csrftoken") // Certifique-se de que isso esteja configurado para CSRF
+                        },
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert('Mensagem excluída com sucesso');
+                                // Recarrega a página atual
+                                location.reload();
+
+                                console.log("Mensagem excluída com sucesso");
+                            } else {
+                                alert(`A exclusão falhou: ${data.error}`)
+                                location.reload();
+                                console.error("Erro ao excluir a mensagem:", data.error);
+                            }
+                        })
+                        .catch(error => {
+                            alert(`Erro ao excluir a mensagem: ${error}`)
+                            console.error("Erro ao excluir a mensagem:", error);
+                        });
+                });
+            });
+
+
+            const botoesAlterar = document.querySelectorAll(".btn-lido");
+
+            botoesAlterar.forEach(function (botao) {
+                botao.addEventListener("click", function () {
+                    const idContato = botao.getAttribute("data-id");
+
+                    // Enviar solicitação AJAX para excluir a mensagem
+                    fetch(`/marcar_como_lido/${idContato}/`, {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": getCookie("csrftoken") // Certifique-se de que isso esteja configurado para CSRF
+                        },
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert('Mensagem marcada como lida');
+                                // Recarrega a página atual
+                                location.reload();
+
+                            } else {
+                                alert(`A exclusão falhou: ${data.error}`)
+                                location.reload();
+                                console.error("Erro ao marcar a mensagem como lida:", data.error);
+                            }
+                        })
+                        .catch(error => {
+                            alert(`Erro ao marcar a mensagem como lida: ${error}`)
+                            console.error("Erro ao marcar a mensagem como lida:", error);
+                        });
+                });
+            });
+
+            const botoesAlterarLido = document.querySelectorAll(".btn-nao-lido");
+
+            botoesAlterarLido.forEach(function (botao) {
+                botao.addEventListener("click", function () {
+                    const idContato = botao.getAttribute("data-id");
+
+                    // Enviar solicitação AJAX para excluir a mensagem
+                    fetch(`/marcar_como_nao_lido/${idContato}/`, {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": getCookie("csrftoken") // Certifique-se de que isso esteja configurado para CSRF
+                        },
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                alert('Mensagem marcada como não lida');
+                                // Recarrega a página atual
+                                location.reload();
+
+                            } else {
+                                alert(`A exclusão falhou: ${data.error}`)
+                                location.reload();
+                                console.error("Erro marcar mensagem como não lida:", data.error);
+                            }
+                        })
+                        .catch(error => {
+                            alert(`Erro ao alterar status da mensagem: ${error}`)
+                            console.error("Erro ao alterar status da mensagem:", error);
+                        });
+                });
+            });
+
+            // Função para obter o valor do cookie CSRF (se necessário)
+            function getCookie(name) {
+                const value = `; ${document.cookie}`;
+                const parts = value.split(`; ${name}=`);
+                if (parts.length === 2) return parts.pop().split(";").shift();
+            }
+        });
+    </script>
+</body>
+
+</html>
